@@ -353,7 +353,7 @@ class Main:
         artist_names = []
         artists_info = []
         mbids = []
-        if( xbmc.Player().isPlayingAudio() == True ):
+        if( xbmc.Player().isPlayingAudio() == True ) and not (xbmc.getCondVisibility("Player.IsInternetStream")):
             try:
                 playing_file = xbmc.Player().getPlayingFile() + ' - ' + xbmc.Player().getMusicInfoTag().getArtist() + ' - ' + xbmc.Player().getMusicInfoTag().getTitle()
             except RuntimeError:
@@ -390,6 +390,10 @@ class Main:
                     playing_song = ''
                 artist_names = self._split_artists( playingartist )
             featured_artists = self._get_featured_artists( playing_song )
+        elif ( xbmc.Player().isPlayingAudio() == True ) and ( xbmc.getCondVisibility("Player.IsInternetStream") ):
+            playingartist = self.WINDOW.getProperty('srh.Artist')
+            playing_song = self.WINDOW.getProperty('srh.Track')  
+            artist_names = self._split_artists( playingartist )   
         elif self._get_infolabel( self.SKININFO['artist'] ):
             artist_names = self._split_artists( self._get_infolabel(self.SKININFO['artist']) )
             mbids = self._get_infolabel( self.SKININFO['mbid'] ).split( ',' )
@@ -495,7 +499,7 @@ class Main:
         if self.LocalImagesFound:
             lw.log( ['local images found'] )
             if self.ARTISTNUM == 1:
-            	self._set_artwork_skininfo( self.CacheDir )
+                self._set_artwork_skininfo( self.CacheDir )
                 self._get_artistinfo()
             if self.TOTALARTISTS > 1:
                self._merge_images()
@@ -850,20 +854,14 @@ class Main:
 
 
     def _set_properties( self ):
-        similar_total = ''
-        album_total = ''
-        self._set_property( "ArtistSlideshow.ArtistBiography", self.biography )
-        for count, item in enumerate( self.similar ):
-            self._set_property( "ArtistSlideshow.%d.SimilarName" % ( count + 1 ), item[0] )
-            self._set_property( "ArtistSlideshow.%d.SimilarThumb" % ( count + 1 ), item[1] )
-            similar_total = str( count )
-        for count, item in enumerate( self.albums ):
-            self._set_property( "ArtistSlideshow.%d.AlbumName" % ( count + 1 ), item[0] )
-            self._set_property( "ArtistSlideshow.%d.AlbumThumb" % ( count + 1 ), item[1] )
-            album_total = str( count )
-        self._set_property( "ArtistSlideshow.SimilarCount", similar_total )
-        self._set_property( "ArtistSlideshow.AlbumCount", album_total )
-        
+      self._set_property("ArtistSlideshow.ArtistBiography", self.biography)
+      for count, item in enumerate( self.similar ):
+          self._set_property("ArtistSlideshow.%d.SimilarName" % ( count + 1 ), item[0])
+          self._set_property("ArtistSlideshow.%d.SimilarThumb" % ( count + 1 ), item[1])
+      for count, item in enumerate( self.albums ):
+          self._set_property("ArtistSlideshow.%d.AlbumName" % ( count + 1 ), item[0])
+          self._set_property("ArtistSlideshow.%d.AlbumThumb" % ( count + 1 ), item[1])
+
 
     def _set_property( self, property_name, value=""):
         #sets a property (or clears it if no value is supplied)
@@ -884,7 +882,7 @@ class Main:
 
 
     def _split_artists( self, response):
-        return response.replace('ft.',' / ').replace('feat.',' / ').split(' / ')
+        return response.replace('ft.',' / ').replace('feat.',' / ').replace(' feat ', ' / ').replace(' ft ',' / ').replace(' vs ',' / ').replace(', ',' / ').replace(' and ',' / ').replace(' / the ',' and the ').split(' / ')
 
 
     def _start_download( self ):
